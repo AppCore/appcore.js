@@ -1,5 +1,14 @@
 #AppCore.js 0.0.2
 
+##TODO:
+
+*Finalise documentation
+*Clean the code with JSHint
+*Write proper project description and explain AppCore.js concept
+*Create proper project page
+*Upload test files
+*Upload demo and examples
+
 ##Events
 ###$.publish() - method
 
