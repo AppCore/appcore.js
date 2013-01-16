@@ -69,11 +69,11 @@
                 var st = document.createElement('style');
              st.textContent = '@media (-webkit-transform-3d), (transform-3d), (-moz-transform-3d), (-o-transform-3d), (-ms-transform-3d) {#test3d{height:5px}}'
                 document.getElementsByTagName('head')[0].appendChild(st);
-                /*document.body.appendChild(div);
-
-               s3d = div.offsetHeight === 5;;
-                st.parentNode.removeChild(st);
-                div.parentNode.removeChild(div);*/
+//                document.body.appendChild(div);
+//
+//               s3d = div.offsetHeight === 5;;
+//                st.parentNode.removeChild(st);
+//                div.parentNode.removeChild(div);
             }
             return s3d;
         })(),
@@ -93,7 +93,7 @@
         class2type={ "[object Boolean]": 'boolean', "[object Number]": 'number', "[object String]": 'string', "[object Function]": 'function', "[object Array]": 'array', "[object Date]": 'date', "[object RegExp]": 'regexp', "[object Object]": 'object'},
 
 
-    //Helper methods
+        //Helper methods
         eventHandlers = [],
         previousHashValue = window.location.hash,
         attachEvent = function (element, evtName, handler) {
@@ -115,14 +115,13 @@
             }
         },
         arrayRemove = function (array, from, to) {
-            /* function source: http://ejohn.org/blog/javascript-array-remove/ */
+            // function source: http://ejohn.org/blog/javascript-array-remove/
             var rest = array.slice((to || from) + 1 || array.length);
             array.length = from < 0 ? array.length + from : from;
             return array.push.apply(array, rest);
         },
-        //todo hashToObject
         hashToObject = function (hash) {
-            /* create a "dictionary" object for the passed in hash value */
+            // create a "dictionary" object for the passed in hash value
             var obj = {}, pair = null, strHash = hash.substring(0, hash.length), hasQuery = true;
             if (strHash.indexOf("#") === 0) {
                 strHash = strHash.substring(1, strHash.length);
@@ -142,7 +141,6 @@
             }
             return obj;
         },
-        //todo objectToHash
         objectToHash = function (object) {
             var s = "";
             for (var i in object) {
@@ -399,169 +397,286 @@
             domObject = (domObject !== null)? domObject: undefined;
             var objects = {
 
-                            /**Public High-level Method to broadcast the message to all subscribers. Method takes one parameter,
-                             ** which can be either a string representation of event or an object with some configuration parameters.
-                             ** Configuration parameters are:
-                             ** {topic: string, system: bool, module: bool}
-                             **
-                             ** {topic}: is a string representation of event.
-                             **
-                             ** {system}: defines whether system events should be included into broadcast. This is handy parameter
-                             ** for inter-module event pub/sub communication. Default is true.
-                             **
-                             ** {module}: defines whether or not module events should be included into broadcast. If set to false, can be used
-                             ** for system events of the core Application. This is really handy option for creating/extending the main application
-                             ** with internal system modules/events. All inner working of the framework use module = false for internal communication.
-                             **
-                             ** publish() has no limitations to the number of parameters sent to the subscriber's eventHandler function.
-                             **
-                             ** Example with parameters:
-                             **
-                             **publish( topic: string, arg 1, arg2, arg3, ...)
-                             **publish( {topic: string, system: bool, module: bool}, arg 1, arg2, arg3, ...)**/
-                            publish: function() {
-                                this.getCore().sendMessage.apply(this.getCore(), arguments);
+                /**
+                 * Public High-level Method to broadcast the message to all subscribers.
+                 *
+                 * Method takes a string as a parameter and it represents a topic id of event.
+                 * publish() has no limitations to the number of parameters sent to the subscriber's eventHandler function.
+                 *
+                 * Example with parameters:
+                 *
+                 * publish( topic: string, arg 1, arg2, arg3, ...)
+                 *
+                 * @namespace Module API
+                 * @category Events
+                 * @usage publish( topic: string, arg 1, arg2, arg3, ...)
+                 * @param {string} topic is a string representation of event.
+                 * @param {any} arg1...n can be any type. Unlimited number of arguments.
+                 * @return {void}
+                 * @api public
+                 */
+                 /**
+                 * Public High-level Method to broadcast the message to all subscribers.
+                 *
+                 * Method takes one parameter which is an object with some configuration parameters.
+                 * publish() has no limitations to the number of parameters sent to the subscriber's eventHandler function.
+                 *
+                 * Example with parameters:
+                 *
+                 * publish( {topic: string, system: bool, module: bool}, arg 1, arg2, arg3, ...)
+                 *
+                 * @namespace Module API
+                 * @category Events
+                 * @usage publish( {topic: string, system: bool, module: bool}, arg 1, arg2, arg3, ...)
+                 * @param {object} object {topic: string, system: bool, module: bool}.<br /><br /><strong>topic</strong> is a string representation of event.<br /><br /> <strong>system</strong> defines whether system events should be included into broadcast. This is handy parameter for inter-module event pub/sub communication. Default is true.<br /><br /> <strong>module</strong> defines whether or not module events should be included into broadcast. If set to false, can be used for system events of the core Application. This is really handy option for creating/extending the main application with internal system modules/events. All inner working of the framework use module = false for internal communication.
+                 * @param {any} arg1...n can be any type. Unlimited number of arguments.
+                 * @return {void}
+                 * @api public
+                 */
+                publish: function() {
+                    this.getCore().sendMessage.apply(this.getCore(), arguments);
 
-                            },
-                            /**API High-level Method to subscribe to the event. Topic and eventHandler are two required parameters,
-                             ** options object is optional and consist of:
-                             **
-                             ** {context: null, priority: int, system: bool}
-                             **
-                             ** {context}: The value of "this" when the event handler is called. Often there is a need to operate within a context for a subscription callback. It can be a reasonable strategy to have the context be set to a jQuery object that will be used inside of the subscription, or even a native DOM element. Default is module instance.
-                             ** {priority}: Priority relative to other subscriptions for the same message. Lower values have higher priority. Subscribing to a topic with high priority can be useful as an error handler or anytime data may need to be checked or augmented before proceeding. Default is 10.
-                             ** {system}: Defines if it is system event or not. All internal events of the framework have system event set to true. All module events have system set to false. It' is useful for separation of module and system eventing and is done to prevent unsubscribe() method used trough module API from unsubscribing essential system events from global event stack. By the same time, if system module is created this must be set to true. Only system module can unsubscribe system events. Default is false.
-                             ** {data}: This parameter sends additional key-value object to the event. This can be used as a static unmodifiable configuration data structure. An example for usa case would be when event is created inside of the module, module creates static field '_module_' : module name', which is used for module look up, when only id of the subscription is known.
-                             **
-                             ** subscribe() can pass none, single or multiple parameters to eventHandler.
-                             **
-                             **Returning false from the event handler will prevent any additional subscriptions from being invoked and will cause publish() to return false.
-                             ** Example with parameters:
-                             **
-                             **subscribe( topic: string, eventHandler: function())
-                             **subscribe( topic: string, eventHandler: function(param))
-                             **subscribe( topic: string, eventHandler: function(param1, param2, ...))
-                             **subscribe( topic: string, eventHandler: function(param1, param2, ...), options: {context: this, priority: 10, system: false, data: object{key:value} })
-                             **
-                             **Returns {topic: string, uid: string, system: bool} or false
-                             **/
-                            subscribe: function() {
-                                var arg = {module: this.getName(), context: this.getCore(), args: arguments};
-                                return this.getCore().receiveMessage(arg);
-                            },
-                            /**Public High-level Method to unsubscribe from the event. Topic and uid are two required parameters.
-                             ** Third parameter "system" is optional and used to remove system events. Default is false.
-                             **
-                             **
-                             ** Example with parameters:
-                             **
-                             **unsubscribe( ) - removes all events from module. Useful when destroying module.
-                             **unsubscribe( module: string) - removes all events from module. Useful when destroying module.
-                             **unsubscribe( topic: string) - module will be assigned automatically, based on the module called from
-                             **unsubscribe( module: string, topic: string) - removes specific event from specific module.
-                             **unsubscribe( {topic: string, uid: string, system: bool}) - takes an event object returned from subscribe() function.
-                             **unsubscribe( {topic: string, uid: string} ) - takes an event object returned from subscribe() function with less parameters.
-                             **
-                             **takes an array of event objects from subscribe() function.
-                             **unsubscribe( Array: [
-                             **    {topic: string, uid: string, system: bool},
-                             **    {topic: string, uid: string, system: bool},
-                             **    {topic: string, uid: string, system: bool}
-                             ** ] )
-                             ** or
-                             **unsubscribe( Array: [
-                             **    {topic: string, uid: string},
-                             **    {topic: string, uid: string},
-                             **    {topic: string, uid: string}
-                             ** ] )
-                             **
-                             **takes an array of module strings.
-                             **unsubscribe( Array: [
-                             **    module: string,
-                             **    module: string,
-                             **    module: string
-                             ** ] )
-                             **
-                             **takes an array of topic strings.
-                             **unsubscribe( Array: [
-                             **    topic: string,
-                             **    topic: string,
-                             **    topic: string
-                             ** ] )
-                             **/
-                            unsubscribe: function() {
-                                var args = {module: this.getName(), args: arguments};
-                                return this.getCore().destroyMessage(args);
-                            },
-                            /**
-                             @description Shorthand method to check if element is in array
-                             @example $.inArray(elem, array)
-                             @return bool
-                             */
-                            inArray: function() {
-                                this.getCore().inArray.apply(this, arguments);
-                            },
-                            /**
-                             @description Get the global static AppCore config
-                             @return string
-                             */
-                            config : config,
-                            /**
-                             @description Shorthand method to subscribe to hashchange event
-                             @param eventHandler
-                             @return void
-                             */
-                            hashchange: function(handler){
-                                this.subscribe('url-change', handler);
-                            }
+                },
+                /**
+                 * API High-level Method to subscribe to the event.
+                 *
+                 * Topic and eventHandler are two required parameters:
+                 * subscribe() can pass none, single or multiple parameters to eventHandler.
+                 *
+                 * Example with parameters:
+                 *
+                 * subscribe( topic: string, eventHandler: function())
+                 * subscribe( topic: string, eventHandler: function(param))
+                 * subscribe( topic: string, eventHandler: function(param1, param2, ...))
+                 *
+                 * @namespace Module API
+                 * @category Events
+                 * @usage subscribe( topic: string, eventHandler: function(param1, param2, ...))
+                 * @param {string} topic string representation of topic id
+                 * @param {function} eventHandler functions that handles event when topic is published
+                 * @return {object} object {topic: string, uid: string, system: bool} or false. Returning false from the event handler will prevent any additional subscriptions from being invoked and will cause publish() to return false.
+                 * @api public
+                 **/
+
+                /**
+                 * API High-level Method to subscribe to the event.
+                 *
+                 * Topic and eventHandler are two required parameters, options object is optional:
+                 * subscribe() can pass none, single or multiple parameters to eventHandler.
+                 *
+                 * Example with parameters:
+                 *
+                 * subscribe( topic: string, eventHandler: function(param1, param2, ...), options: {context: this, priority: 10, system: false, data: object{key:value} })
+                 *
+                 * @namespace Module API
+                 * @category Events
+                 * @usage subscribe( topic: string, eventHandler: function(param1, param2, ...), options: {context: this, priority: 10, system: false, data: object{key:value} })
+                 * @param {string} topic string representation of topic id
+                 * @param {function} eventHandler functions that handles event when topic is published
+                 * @param {object} options {context: null, priority: int, system: bool}<br /><br /><strong>context</strong>: The value of "this" when the event handler is called. Often there is a need to operate within a context for a subscription callback. It can be a reasonable strategy to have the context be set to a jQuery object that will be used inside of the subscription, or even a native DOM element. Default is module instance.<br /><br /><strong>priority</strong>: Priority relative to other subscriptions for the same message. Lower values have higher priority. Subscribing to a topic with high priority can be useful as an error handler or anytime data may need to be checked or augmented before proceeding. Default is 10. <br /><br /><strong>system</strong>: Defines if it is system event or not. All internal events of the framework have system event set to true. All module events have system set to false. It' is useful for separation of module and system eventing and is done to prevent unsubscribe() method used trough module API from unsubscribing essential system events from global event stack. By the same time, if system module is created this must be set to true. Only system module can unsubscribe system events. Default is false.<br /><br /><strong>data</strong>: This parameter sends additional key-value object to the event. This can be used as a static unmodifiable configuration data structure. An example for usa case would be when event is created inside of the module, module creates static field '_module_' : module name', which is used for module look up, when only id of the subscription is known.
+                 * @return {object} object {topic: string, uid: string, system: bool} or false. Returning false from the event handler will prevent any additional subscriptions from being invoked and will cause publish() to return false.
+                 * @api public
+                 **/
+                subscribe: function() {
+                    var arg = {module: this.getName(), context: this.getCore(), args: arguments};
+                    return this.getCore().receiveMessage(arg);
+                },
+                /**Public High-level Method to unsubscribe from the event.
+                 *
+                 * Topic and uid are two required parameters.
+                 * Third parameter "system" is optional and used to remove system events. Default is false.
+                 *
+                 * Removes all events from module. Useful when destroying module.
+                 * <pre>unsubscribe( )</pre>
+                 *
+                 * Removes all events from module. Useful when destroying module.
+                 * <pre>unsubscribe( module: string)</pre>
+                 *
+                 * Module will be assigned automatically, based on the module called from
+                 * <pre>unsubscribe( topic: string)</pre>
+                 *
+                 * Removes specific event from specific module.
+                 * <pre>unsubscribe( module: string, topic: string)</pre>
+                 *
+                 * Takes an event object returned from subscribe() function.
+                 * <pre>unsubscribe( {topic: string, uid: string, system: bool})</pre>
+                 *
+                 * Takes an event object returned from subscribe() function with less parameters.
+                 * <pre>unsubscribe( {topic: string, uid: string} )</pre>
+                 *
+                 * Takes an array of event objects from subscribe() function.
+                 * <pre>unsubscribe( Array: [
+                 *     {topic: string, uid: string, system: bool},
+                 *     {topic: string, uid: string, system: bool},
+                 *     {topic: string, uid: string, system: bool}
+                 *  ] )
+                 *  //or
+                 * unsubscribe( Array: [
+                 *     {topic: string, uid: string},
+                 *     {topic: string, uid: string},
+                 *     {topic: string, uid: string}
+                 *  ] )</pre>
+                 *
+                 * Takes an array of module strings.
+                 * <pre>unsubscribe( Array: [
+                 *     module: string,
+                 *     module: string,
+                 *     module: string
+                 *  ] )</pre>
+                 *
+                 * Takes an array of topic strings.
+                 * <pre>unsubscribe( Array: [
+                 *     topic: string,
+                 *     topic: string,
+                 *     topic: string
+                 *  ] )</pre>
+                 *
+                 * @namespace Module API
+                 * @category Events
+                 * @usage unsubscribe( )
+                 * unsubscribe( module: string)
+                 * unsubscribe( topic: string)
+                 * unsubscribe( topic: string)
+                 * unsubscribe( module: string, topic: string)
+                 * unsubscribe( {topic: string, uid: string, system: bool})
+                 * unsubscribe( {topic: string, uid: string} )
+                 * unsubscribe( Array: [
+                 *     {topic: string, uid: string, system: bool},
+                 *     {topic: string, uid: string, system: bool},
+                 *     {topic: string, uid: string, system: bool}
+                 *  ] )
+                 * unsubscribe( Array: [
+                 *     {topic: string, uid: string},
+                 *     {topic: string, uid: string},
+                 *     {topic: string, uid: string}
+                 *  ] )
+                 * unsubscribe( Array: [
+                 *     module: string,
+                 *     module: string,
+                 *     module: string
+                 *  ] )
+                 * unsubscribe( Array: [
+                 *     topic: string,
+                 *     topic: string,
+                 *     topic: string
+                 *  ] )
+                 *
+                 * @param {string} topic string representation of topic id
+                 * @param {function} eventHandler functions that handles event when topic is published
+                 * @return {object} object {topic: string, uid: string, system: bool} or false. Returning false from the event handler will prevent any additional subscriptions from being invoked and will cause publish() to return false.
+                 * @api public
+                 **/
+                unsubscribe: function() {
+                    var args = {module: this.getName(), args: arguments};
+                    return this.getCore().destroyMessage(args);
+                },
+                /**Shorthand method to check if element is in array
+                 *
+                 * @namespace Module API
+                 * @category Utils
+                 * @usage $.inArray(elem, array)
+                 * @param {any} elem any type to look for
+                 * @param {array} array an array to be searched
+                 * @return {boolean}
+                 */
+                inArray: function() {
+                    this.getCore().inArray.apply(this, arguments);
+                },
+                /**
+                 * Get the global static AppCore config object
+                 *
+                 * @namespace Module API
+                 * @category System
+                 * @usage $.config
+                 * @return {object} config
+                 */
+                config : config,
+                /**
+                 * Shorthand method to subscribe to hashchange event
+                 * @namespace Module API
+                 * @category URL Mapping
+                 * @usage $.hashchange(handler)
+                 * @param {function} handler function that gets fired when url hash part changes
+                 * @return {void}
+                 */
+                hashchange: function(handler){
+                    this.subscribe('url-change', handler);
                 }
+            }
             /**
-            @description Get the name of the defined module
-            @param none
-            @return string
+             * Get the name of the defined module within the module context
+             *
+             * @namespace Module API
+             * @category Module
+             * @usage $.getName()
+             * @return {string} moduleName
             */
             objects['getName'] = function () {
                 return module_name;
             }
             /**
-            @description Get the name of the defined selector engine
-            @param none
-            @return string
+             * Get the name of the defined selector engine
+             *
+             * @namespace Module API
+             * @category Module
+             * @usage $.getEngineName()
+             * @return {string} selectorEngine
             */
             objects['getEngineName'] = function () {
                 return selectorEngineName;
             }
             /**
-            @description Get the reference to the AppCore
-            @param none
-            @return object
+             * Get the reference to the AppCore
+             *
+             * @namespace Module API
+             * @category Module
+             * @usage $.getCore()
+             * @return {object} AppCore
             */
             objects['getCore'] = function () {
                 return app_core;
             }
             /**
-             @description Get the reference to the Dom Collection of the module. Must be set prior with setContainer. When module is created Core searches module name amongths Dom elements.
-             @param none
-             @return dom object
+             * Get the reference to the DOM Collection of the module.
+             *
+             * Must be set prior with setContainer. When module is created Core searches module name amongst DOM elements. If it finds DOM element with exact name it will set the binding between module and DOM element otherwise it keeps it undefined and can be set latter with setContainer() if needed.
+             *
+             * @namespace Module API
+             * @category Module
+             * @usage $.getContainer()
+             * @return {object} domObject
              */
             objects['getContainer'] = function () {
                 return domObject;
             }
             /**
-             @description Bind Dom elements to the module. Creates Dom association with the module.
-             @param none
-             @return dom object
+             * Bind Dom elements to the module. Creates Dom association with the module. This method helps to associate DOM object with the module. Normally you would make a DOM element called for example #shoppingCart and associate it with module "shoppingCart". The module "shoppingCart" becomes responsible for any functionality associated with of DOM representation.
+             *
+             * @namespace Module API
+             * @category Module
+             * @usage $.setContainer()
+             * @param {string} new_Container by default it uses querySelectorAll, or if jQuery is present on the page it will use it by default. In any case css type selectors are supported.
+             * @return {object} domObject
              */
             objects['setContainer'] = function (new_Container) {
                 domObject = Core(new_Container);
             }
             /**
-             @description Logs the message from the module. Module name is automatically appended.
-             @see Due to diffident implementations of console in Firefox and Webkit browsers, line numbers
-             getting messed up in Webkits, but correct in Firefox. Webkits use __proto__ for all methods,
-             this is the reason why they cannot be reassigned to Api variables and should be used via apply.
-             @param message string;
-             @return void
+             * Log the message to the console from the module.
+             *
+             * Due to diffident implementations of console in Firefox and Webkit browsers, line numbers are getting messed up in Webkits, but correct in Firefox. Webkits use __proto__ for all methods, this is the reason why they cannot be reassigned to Api variables and should be used via apply. @param message string;
+             *
+             * @namespace Module API
+             * @category Console
+             * @usage $.log(object[, object, ...])
+             * $.info(object[, object, ...])
+             * $.warn(object[, object, ...])
+             * $.error(object[, object, ...])
+             * $.group(object[, object, ...])
+             * $.groupEnd()
+             *
+             * @param {object} object or string to log to browser console.
+             * @return {void}
              */
             for(var i = 0, length = _console.length; i < length; i++){
                 objects[_console[i]] = app_core[_console[i]];
@@ -574,12 +689,15 @@
 
     };
 
-    /**
-     @description Internal helper method to extend objects and arrays. Return the modified object.
-     @param boolean deep copy? Default false
-     @param object/array object which will be extended
-     @param object/array object which will extend
-     @return object
+    /*!
+     * Internal helper method to extend objects and arrays. Return the modified object.
+     *
+     * @usage extend(isDeepCopy: boolean, source: object, extension: object );
+     * @param {boolean} isDeepCopy deep copy? Default false
+     * @param {object/array} object which will be extended
+     * @param {object/array} object which will extend
+     * @return {object} extendedObject
+     * @api private
      */
     function extend(){
 
@@ -638,11 +756,14 @@
         // Return the modified object
         return target;
     };
-    /**
-     @description Internal helper method to parse events and set correct event namespace for local type events. Local type events are 'module:event'. They use semicolon. Return either the modified eventId or original evenId if considered non-local event.
-     @param string module
-     @param string event
-     @return string
+    /*!
+     * Internal helper method to parse events and set correct event namespace for local type events. Local type events are 'module:event'. They use semicolon. Return either the modified eventId or original evenId if considered non-local event.
+     *
+     * @usage parseEvent(module: string, event: string);
+     * @param {string} module module id
+     * @param {string} event event id
+     * @return {string} event correctly namespaced event
+     * @api private
      */
     function parseEvent(module, event){
         if(event.charAt(0) ==':'){
@@ -654,19 +775,29 @@
     appCore = {
 
         /**
-         @description Enable/Disable debug mode.
-         @param on boolean. Default false
-         @return void
+         * Enable/Disable debug mode. Default false.
+         *
+         * @namespace AppCore API
+         * @category Debug
+         * @usage AppCore.debug(on);
+         * @param {boolean} on
+         * @return {void}
          */
         debug : function (on) {
             debug  = on ? true : false;
         },
 
         /**
-         @description Set selector engine in the AppCore. jQuery, Zepto or any other selector engines can be used. Simply pass the reference to the desired Selector engine and it becomes available in All modules through api. If jQuery is present on the page it is automatically selected as default selector Engine. Only one selector engine can be specified / active at the time.
-         @param engine object. Default jQuery.
-         @example AppCore.setSelectorEngine('jquery', jQuery);
-         @return void
+         * Set selector engine in the AppCore.
+         *
+         * jQuery, Zepto or any other selector engines can be used. Simply pass the reference to the desired Selector engine and it becomes available in All modules through api. If jQuery is present on the page it is automatically selected as default selector Engine. Only one selector engine can be specified / active at the time.
+         *
+         * @namespace AppCore API
+         * @category System
+         * @usage AppCore.setSelectorEngine('jquery', jQuery);
+         * @param {string} name name reference, which is used across the application. For jQuery use 'jquery'.
+         * @param {string} engine reference to selector engine. Default jQuery.
+         * @return void
          */
         setSelectorEngine : function (name, engine) {
             selectorEngine = engine;
@@ -674,16 +805,25 @@
         },
 
         /**
-         @description Extends Facade Api available in the module. This method should be used to add new methods and properties to the Api. Api is passed to the module as a first argument e.g AppCore.module("module_name", function(Api) {}). Default Api consist of small but essential set of features, just enough to get started on the new big thing. Due to the fact that each and every project is individual, this Api should be adjusted and extended on per project bases. Api itself is created in modular way and can be copied across to the new project.
-         @param Api cobject that should be added to the api.
-         @param dependency string. Optional. Used in conjunction with selector engine. If api methods depend on specific selector engine, dependency should be specified to the name of that engine. It helps to protect the code from possible errors. Errors occur when new methods of the api try to access some functionality of non-specified / non-registered selector engine. If dependency is specified it will check if it's active and only then extend the Api. If dependency does not match the selector engine, the Api will not be extended with the newly declared methods.
-         @example 1. set selector engine: AppCore.setSelectorEngine('jquery', jQuery). Note: jQuery is default selector engine. If jQuery is included in the page, it will be set as default selector engine automatically and this step can be skipped.
-                  2. AppCore.extendApi({
-                          find : function (selector) {
-                              return this.getContainer().find(selector);
-                          }
-                      }, 'jquery')
-         @return void
+         * Extends Facade Api available in the module.
+         *
+         * This method should be used to add new methods and properties to the Api. Api is passed to the module as a first argument e.g AppCore.module("module_name", function(Api) {}). Default Api consist of small but essential set of features, just enough to get started on the new big thing. Due to the fact that each and every project is individual, this Api should be adjusted and extended on per project bases. Api itself is created in modular way and can be copied across to the new project.
+         * @namespace AppCore API
+         * @category Extend
+         * @usage <pre>
+         * //1. set selector engine:
+         * AppCore.setSelectorEngine('jquery', jQuery);
+         * //Note: jQuery is default selector engine. If jQuery is included in the page, it will be set as default selector engine automatically and this step can be skipped.
+         * //2. Extend the Api:
+         * AppCore.extendApi({
+         *      find : function (selector) {
+         *          return this.getContainer().find(selector);
+         *      }
+         * }, 'jquery');
+         * </pre>
+         * @param {object} new_object - Api object that should be added to the api.
+         * @param {string} dependency string. Optional. Used in conjunction with selector engine. If api methods depend on specific selector engine, dependency should be specified to the name of that engine. It helps to protect the code from possible errors. Errors occur when new methods of the api try to access some functionality of non-specified / non-registered selector engine. If dependency is specified it will check if it's active and only then extend the Api. If dependency does not match the selector engine, the Api will not be extended with the newly declared methods.
+         * @return void
          */
         extendApi : function (new_object, dependency) {
             if(dependency !== undefined){
@@ -697,20 +837,38 @@
         },
 
         /**
-         @description Extends AppCore . This method should be used to add new methods and properties to the AppCore.
-         @param Api cobject that should be added to the core AppCore.
-         @example @see extendApi
-         @return void
+         * Extends AppCore . This method should be used to add new methods and properties to the AppCore.
+         *
+         * @namespace AppCore API
+         * @category Extend
+         * @usage <pre>
+         * AppCore.extend({
+         *      find : function (selector) {
+         *          return this.getContainer().find(selector);
+         *      }
+         * });
+         * </pre>
+         * @param {object} new_object Api object that should be added to the core AppCore.
+         * @return void
          */
         extend : function (new_object) {
             extend(true, appCore, new_object);
         },
 
         /**
-         @description App config object. This is shared object available between all modules and events in the app. Even though config can be extended at any time, this is strongly discouraged. Best practices dictate that commonly shared object must be declared constant and any data interaction/modification should be and can be achieved through event message passing. This avoids any possible race conditions and stuff that is generally hard to debug. This method creates static, non-mutable object, which is declared right after AppCore autostart but before creation of any AppCore.module(s).
-         @param new_config js Object. Default false
-         @return AppCore.config() - gets config.
-                 AppCore.config({speed: 800}) - returns new config after extention.
+         * Add new app-config object.
+         * This is shared object available between all modules and events in the app. Even though config can be extended at any time, this is strongly discouraged. Best practices dictate that commonly shared object must be declared constant and any data interaction/modification should be and can be achieved through event message passing. Such approach will help to avoid any possible race conditions and stuff that is generally hard to debug.
+         *
+         * This method creates static, non-mutable object, which is declared right after AppCore autostart but before creation of any AppCore.module(s).
+         *
+         * @namespace AppCore API
+         * @category App Config
+         * @usage <pre>
+         *      AppCore.config() // gets config.
+         *      AppCore.config({speed: 800}) // returns new config after extension.
+         * </pre>
+         * @param {object} new_config js Object. Default false.
+         * @return {object} config
          */
         config : function (new_config) {
             if(new_config === undefined){
@@ -721,7 +879,7 @@
         },
 
         /**
-         @description Register AppCore page. To start the page @see startPage(page_name);
+         * Register AppCore page. To start the page @see startPage(page_name);
          @param pageID string. Name of the page. Used to start or stop the page.
          @param creator function. Page executable.
          @return void
@@ -747,7 +905,7 @@
         },
 
         /**
-         @description Register AppCore module. To start the page @see startModule(module_name);
+         * Register AppCore module. To start the page @see startModule(module_name);
          @param moduleID string. Name of the Module. Used to start or stop the module.
          @param creator function. Module executable.
          @return void
@@ -785,7 +943,7 @@
             }
         },
         /**
-         @description Check to see if module/page is currently running.
+         * Check to see if module/page is currently running.
          @param pageID/moduleID string. Name of the page/module.
          @return void
          */
@@ -797,7 +955,7 @@
             return _isRunning;
         },
         /**
-         @description Shorthand method to close particular page. Same as AppCore.publish(pageID+':close');
+         * Shorthand method to close particular page. Same as AppCore.publish(pageID+':close');
          @param pageID string. Name of the page.
          @return void
          */
@@ -807,7 +965,7 @@
             }
         },
         /**
-         @description Start registered AppCore page.
+         * Start registered AppCore page.
          @param pageID string. Name of the page. Used to start or stop the page.
          @return void
          */
@@ -932,7 +1090,7 @@
             }
         },
         /**
-         @description Start registered AppCore module.
+         * Start registered AppCore module.
          @param moduleID string. Name of the module. Used to start or stop the module.
          @param content any. Passes some data to the module. It can be anything.
          @return void
@@ -956,7 +1114,7 @@
         },
 
         /**
-         @description Start all registered AppCore module.
+         * Start all registered AppCore module.
          @return void
          */
         startAllModules : function () {
@@ -969,7 +1127,7 @@
         },
 
         /**
-         @description Stop running AppCore module.
+         * Stop running AppCore module.
          @param moduleID string. Name of the module. Used to start or stop the module.
          @return void
          */
@@ -986,7 +1144,7 @@
         },
 
         /**
-         @description Stop running AppCore page.
+         * Stop running AppCore page.
          @param pageID string. Name of the page. Used to start or stop the page.
          @return void
          */
@@ -1003,7 +1161,7 @@
         },
 
         /**
-         @description Stops all running AppCore modules.
+         * Stops all running AppCore modules.
          @return void
          */
         stopAllModules : function () {
@@ -1016,25 +1174,25 @@
         },
 
         /**Public Low-level Method to broadcast the message to all subscribers. Method takes one parameter,
-         ** which can be either a string representation of event or an object with some configuration parameters.
-         ** Configuration parameters are:
-         ** {topic: string, system: bool, module: bool}
-         **
-         ** {topic}: is a string representation of event.
-         **
-         ** {system}: defines whether system events should be included into broadcast. This is handy parameter
-         ** for inter-module event pub/sub communication. Default is true.
-         **
-         ** {module}: defines whether or not module events should be included into broadcast. If set to false, can be used
-         ** for system events of the core Application. This is really handy option for creating/extending the main application
-         ** with internal system modules/events. All inner working of the framework use module = false for internal communication.
-         **
-         ** publish() has no limitations to the number of parameters sent to the subscriber's eventHandler function.
-         **
-         ** Example with parameters:
-         **
-         **publish( topic: string, arg 1, arg2, arg3, ...)
-         **publish( {topic: string, system: bool, module: bool}, arg 1, arg2, arg3, ...)**/
+         *  which can be either a string representation of event or an object with some configuration parameters.
+         *  Configuration parameters are:
+         *  {topic: string, system: bool, module: bool}
+         * 
+         *  {topic}: is a string representation of event.
+         * 
+         *  {system}: defines whether system events should be included into broadcast. This is handy parameter
+         *  for inter-module event pub/sub communication. Default is true.
+         * 
+         *  {module}: defines whether or not module events should be included into broadcast. If set to false, can be used
+         *  for system events of the core Application. This is really handy option for creating/extending the main application
+         *  with internal system modules/events. All inner working of the framework use module = false for internal communication.
+         * 
+         *  publish() has no limitations to the number of parameters sent to the subscriber's eventHandler function.
+         * 
+         *  Example with parameters:
+         * 
+         * publish( topic: string, arg 1, arg2, arg3, ...)
+         * publish( {topic: string, system: bool, module: bool}, arg 1, arg2, arg3, ...)**/
         publish: function( topic ) {
             var args = slice.call( arguments, 1 ),
                 topicSubscriptions,
@@ -1080,26 +1238,26 @@
         },
 
         /**Public Low-level Method to subscribe to the event. Topic and eventHandler are two required parameters,
-        ** options object is optional and consist of:
-        **
-        ** {context: null, priority: 10, system: true}
-        **
-        ** {context}: The value of "this" when the event handler is called. Often there is a need to operate within a context for a subscription callback. It can be a reasonable strategy to have the context be set to a jQuery object that will be used inside of the subscription, or even a native DOM element.
-        ** {priority}: Priority relative to other subscriptions for the same message. Lower values have higher priority. Default is 10. Subscribing to a topic with high priority can be useful as an error handler or anytime data may need to be checked or augmented before proceeding.
-        ** {system}: Defines if it is system event or not. All internal events of the framework have system event set to true. All module events have system set to false. It' is useful for separation of module and system eventing and is done to prevent unsubscribe() method used trough module API from unsubscribing essential system events from global event stack. By the same time, if system module is created this must be set to true. Only system module can unsubscribe system events. Default is true.
-        **
-        ** {data}: This parameter sends additional key-value object to the event. This can be used as a static unmodifiable configuration data structure. An example for use case would be when event is created inside of the module, module creates static field '_module_' : module name', which is used for module look up, when only id of the subscription is known.
-         ** subscribe() can pass none, single or multiple parameters to event handler.
-        **
-        **Returning false from the event handler will prevent any additional subscriptions from being invoked and will cause publish() to return false.
-        ** Example with parameters:
-        **
-        **subscribe( topic: string, eventHandler: function())
-        **subscribe( topic: string, eventHandler: function(param))
-        **subscribe( topic: string, eventHandler: function(param1, param2, ...))
-        **subscribe( topic: string, eventHandler: function(param1, param2, ...), options: {context: null, priority: 10, system: true, data: object{key: value} } )
-        **
-        **Returns {topic: string, uid: string, system: bool}
+        *  options object is optional and consist of:
+        * 
+        *  {context: null, priority: 10, system: true}
+        * 
+        *  {context}: The value of "this" when the event handler is called. Often there is a need to operate within a context for a subscription callback. It can be a reasonable strategy to have the context be set to a jQuery object that will be used inside of the subscription, or even a native DOM element.
+        *  {priority}: Priority relative to other subscriptions for the same message. Lower values have higher priority. Default is 10. Subscribing to a topic with high priority can be useful as an error handler or anytime data may need to be checked or augmented before proceeding.
+        *  {system}: Defines if it is system event or not. All internal events of the framework have system event set to true. All module events have system set to false. It' is useful for separation of module and system eventing and is done to prevent unsubscribe() method used trough module API from unsubscribing essential system events from global event stack. By the same time, if system module is created this must be set to true. Only system module can unsubscribe system events. Default is true.
+        * 
+        *  {data}: This parameter sends additional key-value object to the event. This can be used as a static unmodifiable configuration data structure. An example for use case would be when event is created inside of the module, module creates static field '_module_' : module name', which is used for module look up, when only id of the subscription is known.
+         *  subscribe() can pass none, single or multiple parameters to event handler.
+        * 
+        * Returning false from the event handler will prevent any additional subscriptions from being invoked and will cause publish() to return false.
+        *  Example with parameters:
+        * 
+        * subscribe( topic: string, eventHandler: function())
+        * subscribe( topic: string, eventHandler: function(param))
+        * subscribe( topic: string, eventHandler: function(param1, param2, ...))
+        * subscribe( topic: string, eventHandler: function(param1, param2, ...), options: {context: null, priority: 10, system: true, data: object{key: value} } )
+        * 
+        * Returns {topic: string, uid: string, system: bool}
         **/
         subscribe: function( topic, eventHandler, options) {
             var context = null,
@@ -1157,19 +1315,19 @@
         },
 
         /**Public Low-level Method to unsubscribe from the event. Topic and uid are two required parameters.
-         ** Third parameter "system" is optional and used to control the removal of system events. Default is true.
-         **
-         **
-         ** Example with parameters:
-         **
-         **unsubscribe( topic: string, uid: string)
-         **unsubscribe( topic: string, uid: string, system: bool )
-         **
-         **unsubscribe( Array: [
-         **    {topic: string, uid: string, system: bool},
-         **    {topic: string, uid: string, system: bool},
-         **    {topic: string, uid: string, system: bool}
-         ** ] )
+         *  Third parameter "system" is optional and used to control the removal of system events. Default is true.
+         * 
+         * 
+         *  Example with parameters:
+         * 
+         * unsubscribe( topic: string, uid: string)
+         * unsubscribe( topic: string, uid: string, system: bool )
+         * 
+         * unsubscribe( Array: [
+         *     {topic: string, uid: string, system: bool},
+         *     {topic: string, uid: string, system: bool},
+         *     {topic: string, uid: string, system: bool}
+         *  ] )
          **/
         unsubscribe: function( topic, uid, system ) {
             var removed = true,
@@ -1316,10 +1474,10 @@
             }else if(args.length == 1){
                 var _argument = args[0];
 
-                /*unsubscribe( Array: [{topic: string, uid: string, system: bool}])*/
-                /*unsubscribe( Array: [{topic: string, uid: string}])*/
-                /*unsubscribe( Array: [topic: string, topic: string])*/
-                /*unsubscribe( Array: [module: string, module: string])*/
+//                unsubscribe( Array: [{topic: string, uid: string, system: bool}])
+//                unsubscribe( Array: [{topic: string, uid: string}])
+//                unsubscribe( Array: [topic: string, topic: string])
+//                unsubscribe( Array: [module: string, module: string])
                 if(!this.isArray(_argument)){
                     _argument = args;
                 }
@@ -1331,11 +1489,11 @@
 
                         if(typeof argument == "string"){
                             argument = parseEvent(module, argument);
-                            /*unsubscribe( module: string)*/
+//                            unsubscribe( module: string)
                             if( _type(argument, "module")){
                                 _removeModuleEvents(argument, this);
                             }else{
-                                /*unsubscribe( topic: string)*/
+//                                unsubscribe( topic: string)
                                 if( _type(argument, "event") ){
                                     this.unsubscribe([moduleData[module].events[argument]]);
                                     delete moduleData[module].events[argument];
@@ -1343,7 +1501,7 @@
                             }
                         }else{
 
-                            /*unsubscribe( {topic: string, uid: string, system: bool})*/
+//                            unsubscribe( {topic: string, uid: string, system: bool})
                             if(argument.topic!==undefined && argument.uid!==undefined){
 
                                 var _module =  false;
@@ -1353,7 +1511,7 @@
                                         break;
                                     }
                                 }
-                                /*unsubscribe( {topic: string, uid: string})*/
+//                                unsubscribe( {topic: string, uid: string})
                                 if(argument.system===undefined){
                                     argument.system = false;
                                 }
@@ -1365,7 +1523,7 @@
                         }
                     }
                 }
-            /*unsubscribe( module: string, topic: string)*/
+//            unsubscribe( module: string, topic: string)
             }else if(args.length == 2){
                 var event = parseEvent(args[0], args[1]);
                 this.unsubscribe([moduleData[args[0]].events[event]]);
@@ -1419,10 +1577,10 @@
 
             return -1;
         },
-        // converts function arguments into Array
+        /** converts function arguments into Array */
         toArray : function(_arguments) { return Array.prototype.slice.call(_arguments); },
-        // DOM methods and functions like alert
-        // aren't supported. They return false on IE.
+        /** DOM methods and functions like alert
+        aren't supported. They return false on IE. */
         isFunction: function( obj ) {
             return this.type(obj) === "function";
         },
@@ -1494,7 +1652,7 @@
             return out;
         },
         /**
-         @description Polyfill for native String.trim function
+         * Polyfill for native String.trim function
          @param attributes_only boolean
          @returns Array
          **/
@@ -1511,7 +1669,7 @@
                     "" :
                     text.toString().replace( trimLeft, "" ).replace( trimRight, "" );
             },
-        /** @description Returns an array of keys for the object. If `attributes_only`
+        /** * Returns an array of keys for the object. If `attributes_only`
             is true will not return keys that map to a `function()`
              @param attributes_only boolean
              @returns Array
@@ -1643,7 +1801,7 @@
             return this;
         },
 
-        /** @description gets or sets a hash querystring value.
+        /** * gets or sets a hash querystring value.
          * single querystring value
          * http://localhost/page.htm#?name=Chris
          * get: AppCore.querystring('name');
@@ -1666,7 +1824,7 @@
             return ho;
         },
 
-        /** @description gets or sets the root hash.
+        /** * gets or sets the root hash.
          * The Hash "root" is basically a plain "location.hash" value.
          *
          * Here's a sample url with a hash value specified:
@@ -1684,7 +1842,7 @@
         },
 
         //todo setHash
-        /** @description sets both the root hash and the hash querystring
+        /** * sets both the root hash and the hash querystring
          *
          * set root and querystring values
          * http://localhost/page.htm#SomeValue?name=Chris
@@ -1724,7 +1882,7 @@
         _routeHandlerRegistered: false,
         _defaultRoute: null,
 
-        /** @description adds a new route handler.
+        /** * adds a new route handler.
          *
          * Using Routes you can easily hook in to jHash to have certain code executed only when the "location.hash" is changed to a value that matches a pre-defined Route Pattern.
          * Routes are made up of two main pieces:
@@ -1784,7 +1942,7 @@
             }
         },
 //todo processRoute
-        /** @description Forces the current route to be processed.
+        /** * Forces the current route to be processed.
          * useful for calling on initial page load, after
          * all page initialization has been performed
          */
@@ -1839,27 +1997,28 @@
             // Initialize url_regexp with a reasonable default.
             urlInternalHost( 'www' );
             return {
-                // Section: Methods
-                //
-                // Method: jQuery.isUrlInternal
-                //
-                // Test whether or not a URL is internal. Non-navigating URLs (ie. #anchor,
-                // javascript:, mailto:, news:, tel:, im: or non-http/https protocol://
-                // links) are not considered internal.
-                //
-                // Usage:
-                //
-                // > jQuery.isUrlInternal( url );
-                //
-                // Arguments:
-                //
-                //   url - (String) a URL to test the internal-ness of.
-                //
-                // Returns:
-                //
-                //  (Boolean) true if the URL is internal, false if external, or undefined if
-                //  the URL is non-navigating.
-
+                /**
+                 * Section: Methods
+                 *
+                 *  Method: jQuery.isUrlInternal
+                 *
+                 *  Test whether or not a URL is internal. Non-navigating URLs (ie. #anchor,
+                 *  javascript:, mailto:, news:, tel:, im: or non-http/https protocol://
+                 *  links) are not considered internal.
+                 *
+                 *  Usage:
+                 *
+                 *  > jQuery.isUrlInternal( url );
+                 *
+                 *  Arguments:
+                 *
+                 *    url - (String) a URL to test the internal-ness of.
+                 *
+                 *  Returns:
+                 *
+                 *   (Boolean) true if the URL is internal, false if external, or undefined if
+                 *   the URL is non-navigating.
+                 */
                 isInternalUrl : function( url ) {
 
                     // non-navigating: url is nonexistent or a fragment
@@ -1876,26 +2035,26 @@
 
                     return true;
                 },
-
-                // Method: jQuery.isUrlExternal
-                //
-                // Test whether or not a URL is external. Non-navigating URLs (ie. #anchor,
-                // mailto:, javascript:, or non-http/https protocol:// links) are not
-                // considered external.
-                //
-                // Usage:
-                //
-                // > jQuery.isUrlExternal( url );
-                //
-                // Arguments:
-                //
-                //   url - (String) a URL to test the external-ness of.
-                //
-                // Returns:
-                //
-                //  (Boolean) true if the URL is external, false if internal, or undefined if
-                //  the URL is non-navigating.
-
+                /**
+                *  Method: jQuery.isUrlExternal
+                * 
+                *  Test whether or not a URL is external. Non-navigating URLs (ie. #anchor,
+                *  mailto:, javascript:, or non-http/https protocol:// links) are not
+                *  considered external.
+                * 
+                *  Usage:
+                * 
+                *  > jQuery.isUrlExternal( url );
+                * 
+                *  Arguments:
+                * 
+                *    url - (String) a URL to test the external-ness of.
+                * 
+                *  Returns:
+                * 
+                *   (Boolean) true if the URL is external, false if internal, or undefined if
+                *   the URL is non-navigating.
+                */
                 isExternalUrl: function( url ) {
                     var result = this.isInternalUrl( url );
 
@@ -1903,26 +2062,26 @@
                         ? !result
                         : result;
                 },
-
-                // Method: jQuery.isUrlFragment
-                //
-                // Test whether or not a URL is a fragment in the context of the current page,
-                // meaning the URL can either begin with # or be a partial URL or full URI,
-                // but when it is navigated to, only the document.location.hash will change,
-                // and the page will not reload.
-                //
-                // Usage:
-                //
-                // > jQuery.isUrlFragment( url );
-                //
-                // Arguments:
-                //
-                //   url - (String) a URL to test the fragment-ness of.
-                //
-                // Returns:
-                //
-                //  (Boolean) true if the URL is a fragment, false otherwise.
-
+                /**
+                *  Method: jQuery.isUrlFragment
+                * 
+                *  Test whether or not a URL is a fragment in the context of the current page,
+                *  meaning the URL can either begin with # or be a partial URL or full URI,
+                *  but when it is navigated to, only the document.location.hash will change,
+                *  and the page will not reload.
+                * 
+                *  Usage:
+                * 
+                *  > jQuery.isUrlFragment( url );
+                * 
+                *  Arguments:
+                * 
+                *    url - (String) a URL to test the fragment-ness of.
+                * 
+                *  Returns:
+                * 
+                *   (Boolean) true if the URL is a fragment, false otherwise.
+                */
                 isFragmentUrl: function( url ) {
                     var matches = ( url || '' ).match( /^([^#]?)([^#]*#).*$/ );
 
@@ -1995,7 +2154,7 @@
 
 AppCore.extendApi({
     /*
-     @description Finds dom element within the context of of the module if module is associated with with DOM elements in the Document. Uses jQuery.
+     * Finds dom element within the context of of the module if module is associated with with DOM elements in the Document. Uses jQuery.
      @example Equivalent for that would be $.getContainer().find(selector)
      */
     find : function (selector) {
@@ -2003,7 +2162,7 @@ AppCore.extendApi({
     },
 
     /*
-     @description Attach an event handler to the module. The event triggered by specified element within the module only needs to bubble up just enough to reach the dom object associated with module before it can execute handler, and not all the way up to the document root. This drastically improves performance of Dom Events. All events of all types can have a specific namespace such as "click.exampleNamespace". Event type 'click' ins namespace 'exampleNamespace'. Uses jQuery.
+     * Attach an event handler to the module. The event triggered by specified element within the module only needs to bubble up just enough to reach the dom object associated with module before it can execute handler, and not all the way up to the document root. This drastically improves performance of Dom Events. All events of all types can have a specific namespace such as "click.exampleNamespace". Event type 'click' ins namespace 'exampleNamespace'. Uses jQuery.
      @example $("p").off( "click", "**" ). Equivalent for that would be $.getContainer().on(events, selector, data, handler )
      */
     on : function (event, selector, data, handler) {
@@ -2011,14 +2170,14 @@ AppCore.extendApi({
     },
 
     /*
-     @description Remove an event handler from the module. To remove all delegated events from the module without removing non-delegated events, use the special value "**". All events of all types in a specific namespace can be removed from the module by providing just a namespace, such as "click.exampleNamespace", where 'click is event type and 'exampleNamespace' is namespace. Uses jQuery.
+     * Remove an event handler from the module. To remove all delegated events from the module without removing non-delegated events, use the special value "**". All events of all types in a specific namespace can be removed from the module by providing just a namespace, such as "click.exampleNamespace", where 'click is event type and 'exampleNamespace' is namespace. Uses jQuery.
      @example Equivalent for that would be $.getContainer().off(events, selector, handler )
      */
     off : function (event, selector, handler) {
         return this.getContainer().off.apply(this.getContainer(), arguments);
     },
     /*
-     @description Shorthand version of
+     * Shorthand version of
      $.busy(function(){}) == $.subscribe('app_busy', function(){})
      $.busy(false) == $.unsubscribe('app_busy')
      $.busy() == $.publish('app_busy')
@@ -2039,7 +2198,7 @@ AppCore.extendApi({
         }
     },
     /*
-     @description Shorthand version of
+     * Shorthand version of
      $.unblock(function(){}) == $.subscribe('app_continue', function(){})
      $.unblock(false) == $.unsubscribe('app_continue')
      $.unblock() == $.publish('app_continue')
@@ -2097,7 +2256,7 @@ AppCore.extend({
 
         // Reset progress bar
         if(_progressBar){
-            /*progressBar.text('0%');*/
+//            progressBar.text('0%');
             progressWrap.show();
         }
         $img.imgpreload({
@@ -2109,7 +2268,7 @@ AppCore.extend({
                 index++;
                 progressId = Math.round( ( ( index ) * 100 ) / length );
                 if(_progressBar){
-                    /*progressBar.text(progressId + '%');*/
+//                    progressBar.text(progressId + '%');
                 }
                 _progress.apply(jQuery(this))
             },
@@ -2120,7 +2279,7 @@ AppCore.extend({
                 // callback executes when all images are loaded
                 setTimeout(function(){
                     progressWrap.hide();
-                    /*progressBar.text('0%');*/
+//                    progressBar.text('0%');
                 },400)
                 _complete.apply(this)
             }
@@ -2133,7 +2292,7 @@ AppCore.extend({
         }else{
             _callback = function(w, h ) {};
         }
-        /*http://uihacker.blogspot.com.au/2012/03/javascript-get-original-size-of-image.html*/
+//        http://uihacker.blogspot.com.au/2012/03/javascript-get-original-size-of-image.html
         var GetImageSize = function( src, callback ) {
             this.image = new Image();
             if(typeof src === 'string'){
